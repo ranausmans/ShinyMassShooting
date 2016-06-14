@@ -1,0 +1,40 @@
+#load libraries
+library(ggthemes)
+
+shinyServer(function(input, output, session) {
+
+  output$trendPlot <- renderGraph({
+    if (length(input$name)==0) print("Please select at least one State")
+
+    else {
+      df_trend <- Ideal_Point_Data  %>%
+        filter(Name %in% input$name)
+  
+      ggideal_point <- ggplot(df_trend) +
+        geom_line(aes(x=Year, y=Killed, by=Name, color=Name)) +
+        labs(x = "Year") +
+        labs(y = "Killed") +
+        labs(title = "Year Vs Killed") +
+        scale_colour_hue("clarity",l=70, c=150) +
+        theme_few()
+
+      # Year range
+      min_Year <- min(df_trend$Year)
+      max_Year <- max(df_trend$Year)
+
+      # use gg2list() to convert from ggplot->plotly
+      gg <- gg2list(ggideal_point)
+
+      # Send this message up to the browser client, which will get fed through to
+      # Plotly's javascript graphing library embedded inside the graph
+      return(list(
+          list(
+              id="trendPlot",
+              task="newPlot",
+              data=gg$data,
+              layout=gg$layout
+          )
+      ))
+    }
+  })
+})
